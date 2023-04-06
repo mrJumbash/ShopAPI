@@ -21,36 +21,34 @@ class AuthorizationAPIView(APIView):
         return Response(status=status.HTTP_401_UNAUTHORIZED,
                         data={'error': 'Username or password wrong!'})
 
+class RegistartionAPIView(APIView):
+    def post(self, request):
+        serializer = UserCreateValidateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        username = serializer.validated_data.get('username')
+        password = serializer.validated_data.get('password')
+        activate_code = ''.join(choices('0123456789', k=6))
+        user = User.objects.create_user(username=username, password=password, is_active=False)
+        code = ConfirmUserCode.objects.create(user_id=user.id, code=activate_code)
+        return Response(status=status.HTTP_201_CREATED,
+                        data={'user_id': user.id,
+                              'code': code.code})
 
-@api_view(['POST'])
-def registration_api_views(request):
-    serializer = UserCreateValidateSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    username = serializer.validated_data.get('username')
-    password = serializer.validated_data.get('password')
-    activate_code = ''.join(choices('0123456789', k=6))
-    user = User.objects.create_user(username=username, password=password, is_active=False)
-    code = ConfirmUserCode.objects.create(user_id=user.id, code=activate_code)
-    return Response(status=status.HTTP_201_CREATED,
-                    data={'user_id': user.id,
-                          'code': code.code})
+class ConfirmAPIView(APIView):
+    def post(self, request):
+        serializer = ConfirmCodeValidateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
+        try:
+            if ConfirmUserCode.objects.filter(code=request.data['code']):
+                User.objects.update(is_active=True)
+                return Response(status=status.HTTP_202_ACCEPTED,
+                                data={'success': 'confirmed'})
 
-@api_view(["POST"])
-def confirm_user_views(request):
-    serializer = ConfirmCodeValidateSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
+            return Response(status=status.HTTP_406_NOT_ACCEPTABLE,
+                            data={'error': 'wrong id or code!'})
 
-    try:
-        if ConfirmUserCode.objects.filter(code=request.data['code']):
-            User.objects.update(is_active=True)
-            return Response(status=status.HTTP_202_ACCEPTED,
-                            data={'success': 'confirmed'})
-
-        return Response(status=status.HTTP_406_NOT_ACCEPTABLE,
-                        data={'error': 'wrong id or code!'})
-
-    except ValueError:
-        return Response(status=status.HTTP_406_NOT_ACCEPTABLE,
-                        data={'error': 'write code number!'})
+        except ValueError:
+            return Response(status=status.HTTP_406_NOT_ACCEPTABLE,
+                            data={'error': 'write code number!'})
 
