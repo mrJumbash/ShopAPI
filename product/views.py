@@ -76,6 +76,11 @@ def product_detail_api_view(request, id):
 
 '''RATING'''
 
+class RatingAPIView(generics.ListAPIView):
+    serializer_class = RatingSerializer
+    queryset = Product.objects.all()
+    pagination_class = PageNumberPagination
+
 @api_view(['GET'])
 def products_reviews_rating_view(request):
     products = Product.objects.all()
@@ -85,6 +90,17 @@ def products_reviews_rating_view(request):
 
 '''CATEGORY'''
 
+class CategoryListCreateAPIView(generics.ListCreateAPIView):
+    serializer_class = CategorySerializer
+    validate_serializer_class = ValidateCategorySerializer
+    queryset = Category.objects.all()
+    pagination_class = PageNumberPagination
+
+class CategoryDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = CategorySerializer
+    validate_serializer = ValidateCategorySerializer
+    queryset = Category.objects.all()
+    lookup_field = 'id'
 @api_view(['GET', 'POST'])
 def category_list_api_view(request):
     if request.method == 'GET':
@@ -129,7 +145,17 @@ def category_detail_api_view(request, id):
 
 
 '''REVIEW'''
+class ReviewListCreateAPIView(generics.ListCreateAPIView):
+    serializer_class = ReviewSerializer
+    validate_serializer_class = ValidateReviewSerializer
+    queryset = Review.objects.all()
+    pagination_class = PageNumberPagination
 
+class ReviewDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = ReviewSerializer
+    validate_serializer = ValidateReviewSerializer
+    queryset = Review.objects.all()
+    lookup_field = 'id'
 @api_view(['GET', 'POST'])
 def review_list_api_view(request):
     if request.method == 'GET':

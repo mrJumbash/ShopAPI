@@ -35,8 +35,11 @@ class Product(models.Model):
 
     @property
     def rating(self):
-        stars_list = [review.stars for review in self.reviews.all()]
-        return round(sum(stars_list) / len(stars_list), 2)
+        try:
+            stars_list = [review.stars for review in self.reviews.all()]
+            return round(sum(stars_list) / len(stars_list), 2)
+        except ZeroDivisionError:
+            return 0
 
 
 
